@@ -26,7 +26,7 @@ While I was doing the [ZigJR](https://github.com/williamw520/zigjr) project, I h
 for using interfaces to plug in different implementations.
 There had been a number of approaches developed over time to make vtable interface possible in Zig. 
 After a deep dive into the language, I have settled on one pattern. With some finetuning, 
-this pattern can provide a clean, flexible, and reusable approach, with little to no impact on implementation types.
+this pattern provides a clean, flexible, and reusable approach, with little to no impact on implementation types.
 
 ## Goals of This Interface Pattern
 
@@ -219,8 +219,7 @@ Let’s review the key parts of this interface pattern:
 
 Though Zig doesn’t have interfaces as a language feature, you can still build your own. 
 You get full control over abstraction, and zero runtime overhead if you want it.
-
-By manually defining vtables, you can achieve dynamic dispatch, support uniform types, 
+With vtable interfaces, you can achieve dynamic dispatch, support uniform types, 
 and write expressive, decoupled APIs.
 
 With better tooling or codegen in the future, some of the boilerplate may even be eliminated.
