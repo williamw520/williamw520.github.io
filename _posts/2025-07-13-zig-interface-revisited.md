@@ -189,13 +189,13 @@ passed to functions, or placed in maps, just like in strictly typed languages wi
 
 Let’s review the key parts of this interface pattern:
 
-| Part                        | Role                                                                             |
-|-----------------------------|----------------------------------------------------------------------------------|
-| (1) `impl:&#160;*anyopaque` | Stores the implementation as an untyped pointer.                                 |
-| (2) function pointers       | The "vtable" pointers to method shims that downcast and call the real methods. |
-| (3) `implBy()`              | Connects an implementation to the interface's untyped pointer and vtable. |
-| (4) Interface methods       | Public API of the interface. Call into the vtable with the opaque pointer. |
-| (5) Delegate struct         | Reconstructs the original type and calls its methods.                            |
+| Part                                        | Role                                                                           |
+|---------------------------------------------|--------------------------------------------------------------------------------|
+| (1)&nbsp;<code>impl:&nbsp;*anyopaque</code> | Stores the implementation as an untyped pointer.                               |
+| (2) function pointers                       | The "vtable" pointers to method shims that downcast and call the real methods. |
+| (3) <code>implBy()</code>                   | Connects an implementation to the interface's untyped pointer and vtable.      |
+| (4) Interface methods                       | Public API of the interface. Call into the vtable with the opaque pointer.     |
+| (5) Delegate struct                         | Reconstructs the original type and calls its methods.                          |
 
 ---
 
