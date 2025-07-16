@@ -3,26 +3,26 @@ Zig Interface Revisited
 ***Achieving polymorphism via dynamic dispatch in Zig***
 
 Unlike many languages that offer `interface` or `virtual` constructs, 
-**Zig has no built-in notion of interfaces**. This reflects Zig’s commitment 
-to simplicity and performance. But that doesn't mean polymorphism is off the table.
-Zig has the tools to build interface-like behavior, making dynamic dispatch possible.
+Zig has no built-in notion of interfaces. This reflects Zig’s commitment 
+to simplicity and performance. That doesn't mean polymorphism is off the table.
+In fact Zig has the tools to build interface-like behavior, making dynamic dispatch possible.
 
 ## Polymorphism in Zig: The Options
 
-Let's backtrack a bit. There are several ways to achieve polymorphism in Zig, depending on the use case:
+Let's backtrack a bit. There are ways to achieve polymorphism in Zig, depending on the use case:
 
-* **Generics and `comptime` dispatch** - for static polymorphism based on types and functions.
+* **Generics and comptime dispatch** - for static polymorphism based on types and functions.
 * **Tagged unions** - for closed sets of known types, enabling sum-type polymorphism.
 * **VTable interfaces** - for dynamic dispatch across heterogeneous implementations.
 
-A common motivation for interfaces is to allow **uniform typing**, e.g. storing multiple 
-implementations in an array or map. Both **tagged unions** and **vtable-based interfaces** support this.
+A common motivation for interfaces is to allow uniform typing, e.g. storing multiple 
+implementations in an array or map. Both tagged unions and vtable-based interfaces support this.
 
-In this post we'll focus on **vtable interfaces**. 
-There're a number of approaches to make vtable interface in Zig. As the language evolves, 
-new possibilities open up. After a deep dive into the language, I have settled on one pattern. 
-With some finetuning, this pattern can provide a clean, flexible, and reusable approach,
-with little to no impact on implementation types.
+In this post we'll focus on vtable interfaces.  
+
+There're a number of approaches developed over time to make vtable interface possible in Zig. 
+After a deep dive into the language, I have settled on one pattern. With some finetuning, 
+this pattern can provide a clean, flexible, and reusable approach, with little to no impact on implementation types.
 
 ## Goals of This Interface Pattern
 
@@ -114,7 +114,7 @@ pub const Logger = struct {
     v_log:      *const fn(*anyopaque, []const u8) void, // (2) vtable
     v_setLevel: *const fn(*anyopaque, usize) void,      // (2) vtable
 
-    // (3) Link the implementation to the interface.
+    // (3) Link up the implementation pointer and vtable functions
     pub fn implBy(impl_obj: anytype) Logger {
         const delegate = LoggerDelegate(impl_obj);
         return .{
@@ -179,7 +179,7 @@ fn TPtr(T: type, opaque_ptr: *anyopaque) T {
 ```
 
 Both `logger1` and `logger2` are of type `Logger`, so they can be stored in arrays, 
-passed to functions, or placed in maps, just like in strict typed languages with first-class interfaces.
+passed to functions, or placed in maps, just like in strictly typed languages with first-class interfaces.
 
 ## How It Works
 
@@ -187,9 +187,9 @@ Let’s review the key parts of this interface pattern:
 
 | Part                        | Role                                                                             |
 |-----------------------------|----------------------------------------------------------------------------------|
-| (1) `impl: *anyopaque`      | Stores the implementation as an untyped pointer.                                 |
-| (2) function pointers | The "vtable" — pointers to method shims that downcast and call the real methods. |
-| (3) `implBy()`              | Connects an implementation to the interface.              |
+| (1) `impl:&#160;*anyopaque` | Stores the implementation as an untyped pointer.                                 |
+| (2) function pointers       | The "vtable" pointers to method shims that downcast and call the real methods. |
+| (3) `implBy()`              | Connects an implementation to the interface's untyped pointer and vtable. |
 | (4) Interface methods       | Public API of the interface. Call into the vtable with the opaque pointer. |
 | (5) Delegate struct         | Reconstructs the original type and calls its methods.                            |
 
@@ -198,26 +198,23 @@ Let’s review the key parts of this interface pattern:
 ## Advantages
 
 * **Clean separation**: Implementations don’t know about the interface.
-* **Reusable**: You can build multiple interfaces using the same pattern.
 * **Extensible**: Adding a new implementation requires no changes to the interface.
 * **Uniform type**: You can store different implementations together.
 
 
 ##  Trade-offs
 
-* Boilerplate: You must manually define each vtable method and delegate.
+* Boilerplate: must manually define each vtable method and delegate.
 * Some indirection: Dynamic dispatch requires extra function pointer calls (minimal, but real).
 
-Still, this is often the best and most flexible pattern for **runtime polymorphism in Zig**.
-
 > The upside is that all boilerplate and complexity is confined to the interface layer; 
-your implementations remain simple and pure.
+ implementations remain simple and pure.
 
 
 ## Closing Thoughts
 
 Though Zig doesn’t have interfaces as a language feature, you can still build your own. 
-You get **full control over abstraction**, and zero runtime overhead if you want it.
+You get full control over abstraction, and zero runtime overhead if you want it.
 
 By manually defining vtables, you can achieve dynamic dispatch, support uniform types, 
 and write expressive, decoupled APIs.
@@ -226,5 +223,4 @@ With better tooling or codegen in the future, some of the boilerplate may even b
 
 Until then, this approach gives you the flexibility of interfaces, in the Zig way.
 
----
 
