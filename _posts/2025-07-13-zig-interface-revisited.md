@@ -18,9 +18,13 @@ Let's backtrack a bit. There are ways to achieve polymorphism in Zig, depending 
 A common motivation for interfaces is to allow uniform typing, e.g. storing multiple 
 implementations in an array or map. Both tagged unions and vtable-based interfaces support this.
 
+## On VTable Interfaces
+
 In this post we'll focus on vtable interfaces.  
 
-There're a number of approaches developed over time to make vtable interface possible in Zig. 
+While I was doing the [ZigJR](https://github.com/williamw520/zigjr) project, I had the need
+for using interfaces to plug in different implementations.
+There had been a number of approaches developed over time to make vtable interface possible in Zig. 
 After a deep dive into the language, I have settled on one pattern. With some finetuning, 
 this pattern can provide a clean, flexible, and reusable approach, with little to no impact on implementation types.
 
