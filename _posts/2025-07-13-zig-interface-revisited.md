@@ -51,6 +51,8 @@ Let’s say we’re building a logging system that supports multiple backends:
 
 Each logger supports a common interface: `log()` and `setLevel()`.
 
+> <small>Note: The code below is simplified for illustrative purposes. 
+It omits many practical considerations in favor of brevity.</small>
 
 ### Debug Logger
 
@@ -62,12 +64,12 @@ pub const DbgLogger = struct {
     level:  usize = 0,
     count:  usize = 0;
 
-    pub fn log(self: *@This(), msg: []const u8) void {
+    pub fn log(self: *DbgLogger, msg: []const u8) void {
         self.count += 1;
         std.debug.print("{}: [level {}] {s}\n", .{self.count, self.level, msg});
     }
 
-    pub fn setLevel(self: *@This(), level: usize) void {
+    pub fn setLevel(self: *DbgLogger, level: usize) void {
         self.level = level;
     }
 };
@@ -84,20 +86,20 @@ pub const FileLogger = struct {
 
     pub fn init(path: []const u8) !FileLogger {
         return .{ 
-            .file = try std.fs.cwd().createFile(path, .{ .read = false }) 
+            .file = try std.fs.cwd().createFile(path, .{}) 
         };
     }
 
-    pub fn deinit(self: *@This()) void {
+    pub fn deinit(self: *FileLogger) void {
         self.file.close();
     }
 
-    pub fn log(self: *@This(), msg: []const u8) void {
+    pub fn log(self: *FileLogger, msg: []const u8) void {
         self.file.writer().print("{s}\n", .{msg})
             catch |err| std.debug.print("Err: {any}\n", .{err});
     }
 
-    pub fn setLevel(self: *@This(), level: usize) void {
+    pub fn setLevel(self: *FileLogger, level: usize) void {
         self.file.writer().print("== New Level {} =={s}\n", .{level})
             catch |err| std.debug.print("Err: {any}\n", .{err});
     }
@@ -130,11 +132,11 @@ pub const Logger = struct {
 
     // (4) Public methods of the interface
 
-    pub fn log(self: @This(), msg: []const u8) void {
+    pub fn log(self: Logger, msg: []const u8) void {
         self.v_log(self.impl, msg);
     }
 
-    pub fn setLevel(self: @This(), level: usize) void {
+    pub fn setLevel(self: Logger, level: usize) void {
         self.v_setLevel(self.impl, level);
     }
 };
@@ -189,13 +191,14 @@ passed to functions, or placed in maps, just like in strictly typed languages wi
 
 Let’s review the key parts of this interface pattern:
 
-| Part                                        | Role                                                                           |
-|---------------------------------------------|--------------------------------------------------------------------------------|
-| (1)&nbsp;<code>impl:&nbsp;*anyopaque</code> | Stores the implementation as an untyped pointer.                               |
-| (2) function pointers                       | The "vtable" pointers to method shims that downcast and call the real methods. |
-| (3) <code>implBy()</code>                   | Connects an implementation to the interface's untyped pointer and vtable.      |
-| (4) Interface methods                       | Public API of the interface. Call into the vtable with the opaque pointer.     |
-| (5) Delegate struct                         | Reconstructs the original type and calls its methods.                          |
+| Part                                        | Role                                                                                                                                                                                |
+|---------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| (1)&nbsp;<code>impl:&nbsp;*anyopaque</code> | Stores the implementation as an untyped pointer.                                                                                                                                    |
+| (2) function pointers                       | The "vtable" pointers to method shims that downcast and call the real methods.                                                                                                      |
+| (3) <code>implBy()</code>                   | Connects an implementation to the interface's untyped pointer and vtable.                                                                                                           |
+| (4) Interface methods                       | Public API of the interface. Call into the vtable with the opaque pointer.                                                                                                          |
+| (5) Delegate struct                         | Reconstructs the original type and calls its methods. This also enforces parameter checking at compile time to ensure the implementation's functions match up to the interface's ones. |
+|                                             |                                                                                                                                                                                     |
 
 ---
 

@@ -62,11 +62,11 @@ pub const Logger = struct {
         };
     }
 
-    pub fn log(self: @This(), msg: []const u8) void {
+    pub fn log(self: Logger, msg: []const u8) void {
         self.vtable.v_log(self.impl, msg);
     }
 
-    pub fn setLevel(self: @This(), level: usize) void {
+    pub fn setLevel(self: Logger, level: usize) void {
         self.vtable.v_setLevel(self.impl, level);
     }
 };
@@ -77,7 +77,7 @@ Let’s review the changes.
 | Part                                    | Role                                                                                                                    |
 |-----------------------------------------|-------------------------------------------------------------------------------------------------------------------------|
 | (1) `vtable`                            | A pointer to a shared const vtable stored in static memory.                                                             |
-| (2) `VTable`                            | Defines the function pointers for the interface.                                                                        |
+| (2) `VTable`                            | Defines the function pointers for the implementation.                                                                        |
 | (3)&nbsp;<code>const&nbsp;vtable</code> | The vtable is created at comptime and stored statically.                                                                |
 | (4) `&vtable`                           | The pointer address is shared across all interface instances using the same implementation type, reducing per-instance memory. |
 
