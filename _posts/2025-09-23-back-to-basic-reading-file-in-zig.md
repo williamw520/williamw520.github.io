@@ -41,7 +41,7 @@ pub fn main() !void {
     var file_reader: std.fs.File.Reader = file.reader(&read_buf);
 
     // Pointer to the std.Io.Reader interface to use the generic IO functions.
-    var reader = &file_reader.interface;
+    const reader = &file_reader.interface;
 
     // An accumulating writer to store data read from the file.
     var line = std.Io.Writer.Allocating.init(alloc);
@@ -95,13 +95,13 @@ Most high-level IO operations are performed through standard interfaces.
 `std.fs.File.Reader` is an implementation of the `std.Io.Reader` interface. 
 It's common practice to obtain a pointer to this interface:
 ```zig
-var reader = &file_reader.interface;
+const reader = &file_reader.interface;
 ```
 **Caution:**
 It's crucial to obtain a *pointer* to the interface (`&file_reader.interface`) 
 rather than copying the interface object. 
 ```zig
-var reader = file_reader.interface; // DON'T DO THIS
+const reader = file_reader.interface; // DON'T DO THIS
 ```
 The pointer references the inner `std.Io.Reader` struct 
 *within* the `std.fs.File.Reader` implementation. Methods of the interface often need to access 
