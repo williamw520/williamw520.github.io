@@ -26,7 +26,6 @@ pub fn main() !void {
     defer _ = gpa.deinit();
     const alloc = gpa.allocator();
 
-    // Process command-line arguments for filename and delimiter.
     var argv = try std.process.argsWithAllocator(alloc);
     defer argv.deinit();
     _ = argv.next();
@@ -34,14 +33,14 @@ pub fn main() !void {
     const delimiter = if (argv.next()) |a| std.mem.sliceTo(a, 0) else "\n";
 
     // Open the file and create a buffered File.Reader.
-    // The buffer size is intentionally small to show handling delimiters spanning buffer boundaries.
+    // Buffer size is kept small to demostrate delimiter spanning buffer boundaries.
     // In production, use a more sensible buffer size (e.g., 4KB or 8KB).
     var file = try std.fs.cwd().openFile(filename, .{ .mode = .read_only });
     defer file.close();
     var read_buf: [2]u8 = undefined;
     var file_reader: std.fs.File.Reader = file.reader(&read_buf);
 
-    // Get a pointer to the std.Io.Reader interface. This allows using the generic IO operations.
+    // Pointer to the std.Io.Reader interface to use the generic IO functions.
     var reader = &file_reader.interface;
 
     // An accumulating writer to store data read from the file.
@@ -66,7 +65,7 @@ pub fn main() !void {
 ```
 
 To run this example, save it as `read_lines.zig` and create a `test.txt` file (or specify another filename) with some lines of text:
-```
+```text
 This is a test.
 Testing 1 2 3.
 
@@ -88,7 +87,7 @@ The new IO API often requires an internal buffer for efficient buffered operatio
 This is evident when creating the `File.Reader` object:
 
 ```zig
-var read_buf: [2]u8 = undefined;
+var read_buf: [1024]u8 = undefined;
 var file_reader: std.fs.File.Reader = file.reader(&read_buf);
 ```
 
@@ -98,7 +97,7 @@ It's common practice to obtain a pointer to this interface:
 ```zig
 var reader = &file_reader.interface;
 ```
-**Important Note on Interfaces:**
+**Caution:**
 It's crucial to obtain a *pointer* to the interface (`&file_reader.interface`) 
 rather than copying the interface object. 
 ```zig
@@ -114,7 +113,7 @@ implementation, leading to runtime errors.
 ### Accumulating Read Data
 
 The program uses `std.Io.Writer.Allocating` to dynamically accumulate data as it's read. 
-This is incredibly useful when processing data of unknown or varying sizes, 
+This is useful when processing data of unknown or varying sizes, 
 preventing buffer overflows and simplifying memory management.
 
 ```zig
@@ -125,17 +124,17 @@ defer line.deinit();
 The core reading operation happens with `reader.streamDelimiter()`:
 
 ```zig
-_ = reader.streamDelimiter(&line.writer, delimiter[0]) catch |err| {
+reader.streamDelimiter(&line.writer, delimiter[0]) catch |err| {
     if (err == error.EndOfStream) break else return err;
 };
 ```
 
 This function reads data from the `reader` and writes it into `line.writer` until it 
-encounters the specified `delimiter` byte. Note that `streamDelimiter` *does not* include 
+encounters the `delimiter` byte. Note that `streamDelimiter` *does not* include 
 the delimiter in the written output. The delimiter byte remains in the input stream. 
 To advance past it, call:
 ```zig
-_ = reader.toss(1);
+reader.toss(1);
 ```
 
 The accumulated data can be retrieved as a slice using `line.written()`:
@@ -150,8 +149,8 @@ that might trigger a reallocation.
 
 ### Handling the Last Part
 
-It's common for files not to end with a delimiter. The `while` loop, which relies on `streamDelimiter` 
-encountering a delimiter or `EndOfStream`, will naturally exit. However, any data read *after* 
+It's common for files not to end with a delimiter. The `while` loop relying on `streamDelimiter` 
+encountering a delimiter or `EndOfStream` will naturally exit. However, any data read *after* 
 the last delimiter and *before* the actual end of the file will still be present in the `line` buffer.
 
 ```zig
@@ -162,16 +161,14 @@ the last delimiter and *before* the actual end of the file will still be present
 
 This check ensures that any remaining data in the buffer after the loop finishes is also processed and printed.
 
-### Beyond Newlines: Custom Delimiters
-
-This program isn't limited to just reading lines. You can specify any single byte as a delimiter 
-using a command-line argument. For example, to break data using a comma:
+To test the last part, use a custom delimiter by specifying a character as a delimiter 
+on the command-line. To break data using a comma:
 
 ```bash
 zig run read_lines.zig -- test2.txt ,
 ```
 
-Let `test2.txt` contains comma-separated values:
+Let `test2.txt` contain comma-separated values:
 ```
 abc,def,xyz,123,456
 ```
@@ -186,6 +183,7 @@ xyz
 ```
 
 This demonstrates the flexibility of `streamDelimiter()` for parsing various delimited data formats. 
-After `streamDelimiter()` encounters the last delimiter (or `EndOfStream`), it continues reading 
-until `EndOfStream` is truly hit. The final `if (line.written().len > 0)` check ensures the
-trailing segment is captured.
+After `streamDelimiter()` encounters the last delimiter, it continues reading 
+until `EndOfStream` is hit. The final `if (line.written().len > 0)` check ensures the
+trailing segment is handled.
+
