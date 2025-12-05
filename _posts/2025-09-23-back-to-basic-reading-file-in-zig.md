@@ -2,6 +2,8 @@ Back to Basics: File Reading with the New IO in Zig
 ===========================================
 ***Embracing the New Input/Output API in Zig 0.15.1***
 
+<small>(For reading an entire file, see [Reading Files Fully in Zig](/2025/12/04/back-to-basic-read-file-fully.html).)</small>
+
 Zig 0.15.1 introduced a significant overhaul of its standard library's IO capabilities, 
 unveiling a powerful new set of `Reader` and `Writer` APIs. This revamp means many existing 
 code examples and assumptions about file handling are now outdated, with some familiar 
@@ -41,7 +43,7 @@ pub fn main() !void {
     var f_reader: std.fs.File.Reader = file.reader(&read_buf);
 
     // Pointer to the std.Io.Reader interface to use the generic IO functions.
-    // Since it's a problematic practice that trips up many people, it's better to
+    // Since it's a problematic practice that has tripped up many people, it's better to
     // directly reference the f_reader.interface in usage than taking a pointer.
     // const reader = &f_reader.interface;
 

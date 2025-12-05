@@ -1,6 +1,8 @@
-Back to Basics: Reading Files in Zig
+Back to Basics: Reading Files Fully in Zig
 ====================================
 ***Ways to Read a File Fully with the New IO in Zig***
+
+<small>(For reading a file line by line, see [File Reading with the New IO in Zig](/2025/09/23/back-to-basic-reading-file-in-zig.html).)</small>
 
 A common task in programming is file reading, especially reading the entire content of a file.
 In Zig, there are a number of ways to read an entire file into memory. 
