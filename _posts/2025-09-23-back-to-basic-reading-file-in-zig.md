@@ -38,10 +38,12 @@ pub fn main() !void {
     var file = try std.fs.cwd().openFile(filename, .{ .mode = .read_only });
     defer file.close();
     var read_buf: [2]u8 = undefined;
-    var file_reader: std.fs.File.Reader = file.reader(&read_buf);
+    var f_reader: std.fs.File.Reader = file.reader(&read_buf);
 
     // Pointer to the std.Io.Reader interface to use the generic IO functions.
-    const reader = &file_reader.interface;
+    // Since it's a problematic practice that trips up many people, it's better to
+    // directly reference the f_reader.interface in usage than taking a pointer.
+    // const reader = &f_reader.interface;
 
     // An accumulating writer to store data read from the file.
     var line = std.Io.Writer.Allocating.init(alloc);
@@ -49,10 +51,10 @@ pub fn main() !void {
 
     // Main loop to read data segment by segment.
     while (true) {
-        _ = reader.streamDelimiter(&line.writer, delimiter[0]) catch |err| {
+        _ = f_reader.interface.streamDelimiter(&line.writer, delimiter[0]) catch |err| {
             if (err == error.EndOfStream) break else return err;
         };
-        _ = reader.toss(1);             // skip the delimiter byte.
+        _ = f_reader.interface.toss(1); // skip the delimiter byte.
         std.debug.print("{s}\n", .{ line.written() });
         line.clearRetainingCapacity();  // reset the accumulating buffer.
     }
@@ -88,20 +90,20 @@ This is evident when creating the `File.Reader` object:
 
 ```zig
 var read_buf: [1024]u8 = undefined;
-var file_reader: std.fs.File.Reader = file.reader(&read_buf);
+var f_reader: std.fs.File.Reader = file.reader(&read_buf);
 ```
 
 Most high-level IO operations are performed through standard interfaces. 
 `std.fs.File.Reader` is an implementation of the `std.Io.Reader` interface. 
 It's common practice to obtain a pointer to this interface:
 ```zig
-const reader = &file_reader.interface;
+const reader = &f_reader.interface;
 ```
 **Caution:**
-It's crucial to obtain a *pointer* to the interface (`&file_reader.interface`) 
+It's crucial to obtain a *pointer* to the interface (`&f_reader.interface`) 
 rather than copying the interface object. 
 ```zig
-const reader = file_reader.interface; // DON'T DO THIS
+const reader = f_reader.interface; // DON'T DO THIS
 ```
 The pointer references the inner `std.Io.Reader` struct 
 *within* the `std.fs.File.Reader` implementation. Methods of the interface often need to access 
