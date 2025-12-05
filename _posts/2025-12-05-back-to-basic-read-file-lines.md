@@ -2,7 +2,8 @@ Back to Basics: Reading a File into Lines in Zig
 ====================================
 ***Building a Simple API for Reading Lines of a File in Zig***
 
-<small>(For reading a file line by line, see [File Reading with the New IO in Zig](/2025/09/23/back-to-basic-reading-file-in-zig.html). For reading an entire file, see [Reading Files Fully in Zig](/2025/12/04/back-to-basic-read-file-fully.html).)</small>
+<small>(See [File Reading with the New IO in Zig](/2025/09/23/back-to-basic-reading-file-in-zig.html) for reading a file line by line.)</small>  
+<small>(See [Reading Files Fully in Zig](/2025/12/04/back-to-basic-read-file-fully.html) for reading an entire file.)</small>
 
 A common need in programming is to process the lines of a text file, 
 whether you are parsing configuration files, analyzing logs, or importing data sets. 
@@ -44,7 +45,7 @@ pub const FileLines = struct {
         var file = try dir.openFile(filename, .{});
         defer file.close();
 
-        const buf = try alloc.alloc(u8, 4096);
+        const buf = try alloc.alloc(u8, 4096);  // use heap; avoid taking stack space
         defer alloc.free(buf);
         var f_reader = file.reader(buf);
         var file_data = std.Io.Writer.Allocating.init(alloc);
