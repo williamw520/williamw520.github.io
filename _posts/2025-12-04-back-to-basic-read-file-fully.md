@@ -21,7 +21,14 @@ and reading all the bytes in one function call.
 ```zig
 const std = @import("std");
 
+// Zig 0.15.1
 pub fn read_full1(allocator: std.mem.Allocator, path: []const u8) ![]u8 {
+    const content = try std.fs.cwd().readFileAlloc(alloc, filename, std.math.maxInt(usize));
+    return content; // The caller is responsible for freeing the content.
+}
+
+// Zig 0.16.x
+pub fn read_full1_0_16(allocator: std.mem.Allocator, path: []const u8) ![]u8 {
     const content = try std.fs.cwd().readFileAlloc(allocator, path, .unlimited);
     return content; // The caller is responsible for freeing the content.
 }
@@ -47,11 +54,12 @@ This method is slightly more explicit. It requires getting the file size,
 allocating a buffer of that size, and calling `std.fs.Dir.readFile` to read the whole file.
 
 ```zig
+// Zig 0.15.1
 pub fn read_full2(allocator: std.mem.Allocator, path: []const u8) ![]u8 {
     var file = try std.fs.cwd().openFile(path, .{});
     defer file.close();
     const content = try allocator.alloc(u8, (try file.stat()).size);
-    _ = try std.fs.Dir.readFile(std.fs.cwd(), path, content);
+    _ = try std.fs.cwd().readFile(path, content);
     return content;
 }
 ```
@@ -66,6 +74,7 @@ internal reading buffer of the `std.io.Reader` interface. The `.fill()` call
 reads the whole file into the buffer in one shot.
 
 ```zig
+// Zig 0.15.1
 pub fn read_full3(allocator: std.mem.Allocator, path: []const u8) ![]u8 {
     var file = try std.fs.cwd().openFile(path, .{});
     defer file.close();
