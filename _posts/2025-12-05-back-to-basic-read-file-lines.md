@@ -39,7 +39,11 @@ pub const FileLines = struct {
 
     pub fn read(alloc: std.mem.Allocator, dir: std.fs.Dir, 
                 filename: []const u8) !FileLines {
-        const data = try std.fs.Dir.readFileAlloc(dir, filename, alloc, .unlimited);
+        // Zig 0.16.x
+        // const data = try dir.readFileAlloc(filename, alloc, .unlimited);
+        // Zig 0.15.1
+        const data = try dir.readFileAlloc(alloc, filename, std.math.maxInt(usize));
+
         var slices: std.ArrayList([]const u8) = .empty;
         var itr = std.mem.splitScalar(u8, data, '\n');
         while (itr.next()) |line| {
